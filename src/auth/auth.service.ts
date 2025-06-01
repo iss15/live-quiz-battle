@@ -7,6 +7,9 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
+  validateUserById(sub: any) {
+    return this.usersService.findOneById(sub);
+  }
   constructor(
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,

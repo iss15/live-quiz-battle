@@ -7,6 +7,7 @@ import { QuizModule } from './quiz/quiz.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { SseModule } from './sse/sse.module';
+import { QuizWebSocketModule } from './quiz/websocket/quiz-websocket.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SseModule } from './sse/sse.module';
     UsersModule,
     QuizModule,
     SseModule,
+    QuizWebSocketModule,
   ],
 })
 export class AppModule {}

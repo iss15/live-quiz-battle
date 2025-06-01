@@ -4,7 +4,7 @@ import { QuizService } from './quiz.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { UseGuards } from '@nestjs/common';
-import { GqlAuthGuard } from 'src/shared/guards/graphql-auth.guard';
+import { GqlAuthGuard } from 'src/auth/guards/graphql-auth.guard';
 
 
 @Resolver(() => Quiz)

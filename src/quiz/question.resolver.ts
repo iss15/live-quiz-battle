@@ -3,7 +3,7 @@ import { Question } from './entities/question.entity';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { UseGuards } from '@nestjs/common';
-import { GqlAuthGuard } from 'src/shared/guards/graphql-auth.guard';
+import { GqlAuthGuard } from 'src/auth/guards/graphql-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { QuestionsService } from './question.service';
 

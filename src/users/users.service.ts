@@ -8,6 +8,9 @@ import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UsersService {
+  findOneById(sub: any) {
+    return this.findOne(sub);
+  }
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,

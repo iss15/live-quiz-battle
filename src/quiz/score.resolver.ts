@@ -2,7 +2,7 @@ import { Args, Mutation, Query, Resolver, ID, Context } from '@nestjs/graphql';
 import { ScoreService } from './score.service';
 import { Score } from './entities/score.entity';
 import { UseGuards } from '@nestjs/common';
-import { GqlAuthGuard } from 'src/shared/guards/graphql-auth.guard';
+import { GqlAuthGuard } from 'src/auth/guards/graphql-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { CreateScoreDto } from './dto/create-score.dto';
 
