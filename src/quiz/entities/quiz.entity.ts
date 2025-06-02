@@ -26,7 +26,7 @@ export class Quiz extends BaseEntity {
   status: QuizStatus;
 
   @Field({ nullable: true })
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   startTime?: Date;
 
   @Field({ nullable: true })

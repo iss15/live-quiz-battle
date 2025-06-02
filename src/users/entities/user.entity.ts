@@ -4,6 +4,7 @@ import { Quiz } from '../../quiz/entities/quiz.entity';
 import { Score } from '../../quiz/entities/score.entity';
 import { UserRole } from '../enums/user-role.enum';
 import { Field, ObjectType } from '@nestjs/graphql';
+import { ApiProperty } from '@nestjs/swagger';
 
 @ObjectType()
 @Entity()

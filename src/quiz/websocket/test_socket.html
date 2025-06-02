@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quiz WebSocket Test</title>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+</head>
+<body>
+  <h1>Quiz WebSocket Test</h1>
+
+  <label for="token">JWT Token:</label>
+  <input type="text" id="token" size="50">
+  <br><br>
+
+  <label for="quizId">Quiz ID:</label>
+  <input type="text" id="quizId">
+  <br><br>
+
+  <button onclick="connect()">Connect</button>
+  <button onclick="joinQuiz()">Join Quiz</button>
+  <button onclick="startQuiz()">Start Quiz</button>
+  <button onclick="submitAnswer()">Submit Answer</button>
+
+  <pre id="log" style="background: #eee; padding: 1em; max-height: 300px; overflow-y: scroll;"></pre>
+
+  <script>
+    let socket;
+
+    function log(message) {
+      const logElement = document.getElementById('log');
+      logElement.textContent += `${message}\n`;
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+
+    function connect() {
+  const token = document.getElementById('token').value;
+
+  socket = io('http://localhost:3000/quiz', {
+    extraHeaders: {
+      Authorization: `Bearer ${token}`, // 👈 CORRECT header format
+    },
+  });
+
+  socket.on('connect', () => {
+    log(`Connected with ID: ${socket.id}`);
+  });
+
+  socket.on('connection', (msg) => log(`Server: ${msg}`));
+  socket.on('error', (msg) => log(`Error: ${msg}`));
+  socket.on('joined-quiz', (data) => log(`Joined quiz: ${JSON.stringify(data)}`));
+  socket.on('player-joined', (data) => log(`Player joined: ${JSON.stringify(data)}`));
+  socket.on('quiz-started', (data) => log(`Quiz started: ${JSON.stringify(data)}`));
+  socket.on('question', (data) => log(`Question: ${JSON.stringify(data)}`));
+  socket.on('question-ended', (data) => log(`Question ended: ${JSON.stringify(data)}`));
+  socket.on('answer-result', (data) => log(`Answer result: ${JSON.stringify(data)}`));
+  socket.on('rankings-update', (data) => log(`Rankings: ${JSON.stringify(data)}`));
+  socket.on('quiz-ended', (data) => log(`Quiz ended: ${JSON.stringify(data)}`));
+  socket.on('player-left', (data) => log(`Player left: ${JSON.stringify(data)}`));
+  socket.on('room-participants', (data) => log(`Participants: ${JSON.stringify(data)}`));
+}
+
+
+    function joinQuiz() {
+      const quizId = document.getElementById('quizId').value;
+      socket.emit('join-quiz', { quizId });
+    }
+
+    function startQuiz() {
+      const quizId = document.getElementById('quizId').value;
+      socket.emit('start-quiz', { quizId });
+    }
+
+    function submitAnswer() {
+      const quizId = document.getElementById('quizId').value;
+      const questionId = prompt("Enter Question ID:");
+      const answer = prompt("Enter Answer:");
+      socket.emit('submit-answer', { quizId, questionId, answer });
+    }
+  </script>
+</body>
+</html>

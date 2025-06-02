@@ -15,7 +15,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   });
-
+app.useLogger(['error', 'warn', 'log', 'debug', 'verbose']);
   // Use our custom WebSocket adapter
   app.useWebSocketAdapter(new SocketIoAdapter(app));
 

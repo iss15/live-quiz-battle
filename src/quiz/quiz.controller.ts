@@ -17,14 +17,20 @@ import { AuthGuard } from '@nestjs/passport';
 import { Quiz } from './entities/quiz.entity';
 import { Request } from 'express';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from 'src/users/enums/user-role.enum';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @ApiTags('quizzes')
 @Controller('quizzes')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new quiz' })
   @ApiResponse({ status: 201, description: 'Quiz created', type: Quiz })

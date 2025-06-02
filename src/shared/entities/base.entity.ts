@@ -12,10 +12,14 @@ export abstract class BaseEntity {
   id: string;
 
   @Field(() => Date)
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Field(() => Date)
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ 
+    type: 'timestamp', 
+    default: () => 'CURRENT_TIMESTAMP', 
+    onUpdate: 'CURRENT_TIMESTAMP' 
+  })
   updatedAt: Date;
 }
