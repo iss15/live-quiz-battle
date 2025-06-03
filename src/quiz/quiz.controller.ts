@@ -42,6 +42,8 @@ export class QuizController {
   }
 
   @Get()
+  @Roles(UserRole.PLAYER, UserRole.ADMIN)
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all quizzes' })
   @ApiResponse({ status: 200, description: 'List of quizzes', type: [Quiz] })
   async findAll(): Promise<Quiz[]> {
@@ -49,6 +51,8 @@ export class QuizController {
   }
 
   @Get(':id')
+  @Roles(UserRole.PLAYER, UserRole.ADMIN)
+  @ApiBearerAuth()  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Get a quiz by ID' })
   @ApiResponse({ status: 200, description: 'Quiz found', type: Quiz })
   @ApiResponse({ status: 404, description: 'Quiz not found' })
@@ -57,7 +61,7 @@ export class QuizController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.PLAYER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a quiz' })
   @ApiResponse({ status: 200, description: 'Quiz updated', type: Quiz })
@@ -69,7 +73,7 @@ export class QuizController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @Roles(UserRole.PLAYER, UserRole.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a quiz' })
   @ApiResponse({ status: 200, description: 'Quiz deleted' })

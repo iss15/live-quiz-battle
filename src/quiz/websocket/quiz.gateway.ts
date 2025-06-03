@@ -69,6 +69,7 @@ export class QuizGateway
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('join-quiz')
   async handleJoinQuiz(client: Socket, payload: { quizId: string }) {
+    console.log("joineddddd");
     const user = client.data.user as User;
     const quizId = payload.quizId;
 
@@ -101,8 +102,6 @@ export class QuizGateway
         quiz: {
           id: quiz.id,
           title: quiz.title,
-          description: quiz.description,
-          creatorId: quiz.creator.id,
         },
         user,
       });
@@ -283,32 +282,35 @@ export class QuizGateway
     }
   }
 private async sendRoomParticipants(quizId: string) {
-  const namespace = this.server.of('/quiz');
-  const room = namespace.adapter.rooms.get(quizId);
-  if (!room) return;
+  try {
+    // Récupérer tous les sockets dans la room (async)
+    const sockets = await this.server.in(quizId).fetchSockets();
 
-  interface Participant {
-    userId: string;
-    username: string;
-  }
-
-  const participants: Participant[] = [];
-
-  for (const socketId of room) {
-    const socket = namespace.sockets.get(socketId);
-    if (socket?.data?.user) {
-      participants.push({
-        userId: socket.data.user.id,
-        username: socket.data.user.username,
-      });
+    interface Participant {
+      userId: string;
+      username: string;
     }
-  }
 
-  namespace.to(quizId).emit('room-participants', {
-    count: participants.length,
-    participants,
-  });
+    const participants: Participant[] = [];
+
+    for (const socket of sockets) {
+      if (socket.data?.user) {
+        participants.push({
+          userId: socket.data.user.id,
+          username: socket.data.user.username,
+        });
+      }
+    }
+
+    this.server.to(quizId).emit('room-participants', {
+      count: participants.length,
+      participants,
+    });
+  } catch (error) {
+    this.logger.error('sendRoomParticipants error:', error);
+  }
 }
+
 
 
 }

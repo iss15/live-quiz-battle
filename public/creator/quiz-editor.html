@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Quiz</title>
+</head>
+<body>
+  <div id="navbar"></div>
+  <h1>Create New Quiz</h1>
+  <form id="create-quiz-form">
+    <input type="text" id="title" placeholder="Title" required />
+    <textarea id="description" placeholder="Description"></textarea>
+    <button type="submit">Create</button>
+  </form>
+
+  <script>
+    fetch('partials/navbar.html').then(res => res.text()).then(html => {
+      document.getElementById('navbar').innerHTML = html;
+    });
+
+    const form = document.getElementById('create-quiz-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('jwt');
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+
+      const res = await fetch('http://localhost:3000/quizzes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ title, description })
+      });
+
+      if (res.status === 401) {
+        alert('Unauthorized. Please login again.');
+      } else if (!res.ok) {
+        const err = await res.json();
+        alert('Error: ' + err.message);
+      } else {
+        const quiz = await res.json();
+        window.location.href = `quiz-details.html?id=${quiz.id}`;
+      }
+    });
+  </script>
+</body>
+</html>

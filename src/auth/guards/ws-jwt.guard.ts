@@ -1,54 +1,35 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { WsException } from '@nestjs/websockets';
-import { AuthService } from '../auth.service';
+import { Socket } from 'socket.io';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
-  constructor(
-    private jwtService: JwtService,
-    private authService: AuthService,
-  ) {}
+  private readonly logger = new Logger('WsJwtGuard');
+
+  constructor(private readonly jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const client = context.switchToWs().getClient();
-    const token = this.extractTokenFromHeader(client);
+    const client: Socket = context.switchToWs().getClient();
+    const token = client.handshake.query.token as string;
+
+    this.logger.log(`🔐 WS Guard - Token received: ${token}`);
 
     if (!token) {
-      throw new WsException('Unauthorized');
+      this.logger.warn('No token provided');
+      return false;
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
-      });
-
-      const user = await this.authService.validateUserById(payload.sub);
-      if (!user) {
-        throw new WsException('User not found');
-      }
-
-      // Attach user to the client for future reference
-      client.data.user = user;
-    } catch {
-      throw new WsException('Unauthorized');
+      const payload = this.jwtService.verify(token);
+      client.data.user = {
+        id: payload.sub,
+        username: payload.username,
+        role: payload.role,
+      };
+      return true;
+    } catch (err) {
+      this.logger.error('Invalid JWT token', err);
+      return false;
     }
-
-    return true;
-  }
-
-  private extractTokenFromHeader(client: any): string | undefined {
-    const authHeader = client.handshake.headers.authorization;
-      console.log('🔐 WS Guard - Authorization Header:', authHeader);
-
-    if (authHeader && authHeader.split(' ')[0] === 'Bearer') {
-      return authHeader.split(' ')[1];
-    }
-    return undefined;
   }
 }

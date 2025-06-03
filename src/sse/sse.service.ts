@@ -1,21 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { Observable, Observer } from 'rxjs';
+import { Injectable, Logger } from '@nestjs/common';
 import { SseClient } from './interfaces/sse.-client.interface';
 import { RankingUpdateDto } from './dtos/ranking-updates.dto';
+import { UsersService } from '../users/users.service'; // <-- import UsersService
 
 @Injectable()
 export class SseService {
+  private readonly logger = new Logger(SseService.name);
   private clients: Map<string, SseClient[]> = new Map();
-  // Simple in-memory store of user scores:
   private quizScores: Map<string, Record<string, number>> = new Map();
 
+  constructor(private readonly usersService: UsersService) {} // <-- inject UsersService
+
   addClient(quizId: string, client: SseClient): void {
-    let quizClients = this.clients.get(quizId);
-    if (!quizClients) {
-      quizClients = [];
-      this.clients.set(quizId, quizClients);
-    }
+    const quizClients = this.clients.get(quizId) ?? [];
     quizClients.push(client);
+    this.clients.set(quizId, quizClients);
   }
 
   removeClient(quizId: string, clientId: string): void {
@@ -28,7 +27,7 @@ export class SseService {
     }
   }
 
-  sendRankingUpdate(quizId: string, update: RankingUpdateDto): void {
+  async sendRankingUpdate(quizId: string, update: RankingUpdateDto): Promise<void> {
     const quizClients = this.clients.get(quizId);
     if (!quizClients) return;
 
@@ -40,10 +39,8 @@ export class SseService {
   }
 
   async initializeQuizRankings(quizId: string): Promise<void> {
-    // Initialize empty score table
     this.quizScores.set(quizId, {});
-    // Broadcast the initial/no-data ranking to connected clients
-    this.sendRankingUpdate(quizId, {
+    await this.sendRankingUpdate(quizId, {
       quizId,
       rankings: [],
     });
@@ -51,12 +48,12 @@ export class SseService {
 
   async updatePlayerScore(quizId: string, userId: string, points: number): Promise<void> {
     const scores = this.quizScores.get(quizId);
-    if (!scores) return; // Might be uninitialized
+    if (!scores) return;
 
     scores[userId] = (scores[userId] || 0) + points;
 
-    const rankings = this.buildRankings(scores);
-    this.sendRankingUpdate(quizId, {
+    const rankings = await this.buildRankings(scores); // <-- now async
+    await this.sendRankingUpdate(quizId, {
       quizId,
       rankings,
     });
@@ -67,25 +64,38 @@ export class SseService {
     if (!scores) {
       return [];
     }
-    return this.buildRankings(scores);
+    return await this.buildRankings(scores);
   }
 
   async finalizeQuizRankings(quizId: string): Promise<void> {
-    // Optional: persist final results somewhere?
-    // Cleanup in-memory data
     this.quizScores.delete(quizId);
   }
 
-  private buildRankings(scores: Record<string, number>) {
+  private async buildRankings(scores: Record<string, number>) {
     const entries = Object.entries(scores);
-    // Sort by descending points
+    this.logger.log('Building rankings from scores:', entries);
+
     entries.sort(([, scoreA], [, scoreB]) => scoreB - scoreA);
-    // Return ranking in the expected format
-    return entries.map(([userId, totalScore], index) => ({
-      userId,
-      username: userId, // or fetch from DB
-      score: totalScore,
-      position: index + 1,
-    }));
+
+    const rankings = await Promise.all(
+      entries.map(async ([userId, totalScore], index) => {
+        let username = userId;
+        try {
+          const user = await this.usersService.findOne(userId);
+          username = user.username;
+        } catch (error) {
+          this.logger.warn(`Username not found for user ID ${userId}`);
+        }
+
+        return {
+          userId,
+          username,
+          score: totalScore,
+          position: index + 1,
+        };
+      }),
+    );
+
+    return rankings;
   }
 }
